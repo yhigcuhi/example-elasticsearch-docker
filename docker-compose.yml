@@ -1,0 +1,42 @@
+# docker compose yml としての書き方の バージョン
+version: '3.9'
+
+# 立てるコンテナ一覧
+services:
+  # elasticsearch
+  elsearch:
+    # 管理コンテナ名
+    container_name: ${APP_NAME}-elsearch
+    # Dockerファイルにて 定義
+    build: ./docker/elasticsearch
+    # 環境設定値設定
+    environment:
+      # sudo service elasticsearch stopなどセキュリティ suじゃなくても一旦できるように
+      - xpack.security.enabled=false
+      # シングルノード(ノード数=1?)で
+      - discovery.type=single-node
+      # パスワード セキュリティOFFでも必要か?
+      # - ELASTIC_PASSWORD=${ELSEARCH_PASSWORD:-zaq12wsx}
+    # メモリの制限などのリソース制限
+    ulimits:
+      # メモリ ロック一旦解除? -1かな?
+      memlock:
+        soft: -1
+        hard: -1
+    # ホスト名指定
+    hostname: ${ELSEARCH_HOST:-elasticsearch}
+    # 使用ポート
+    ports:
+      - ${ELSEARCH_PORT:-9200}:9200
+  # kibana
+  kibana:
+    # 管理コンテナ名
+    container_name: ${APP_NAME}-kibana
+    # Dockerファイルにて 定義
+    build: ./docker/kibana
+    # 環境設定値設定
+    environment:
+      - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_HOSTS:-http://elasticsearch:9200}
+    # 使用ポート
+    ports:
+      - ${KIBANA_PORT:-5601}:5601
